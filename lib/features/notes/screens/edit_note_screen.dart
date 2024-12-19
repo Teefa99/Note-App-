@@ -1,22 +1,33 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:note_app/manager/components/custom_text_field.dart';
 import 'package:note_app/manager/ui/color.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:note_app/manager/ui/toast.dart';
 
-class AddNewCategoryScreen extends StatefulWidget {
-  const AddNewCategoryScreen({super.key});
+class EditNoteScreen extends StatefulWidget {
+  const EditNoteScreen({super.key, required this.categoryID, required this.note, required this.noteID});
+  final String noteID;
+  final String categoryID;
+  final String note;
 
   @override
-  State<AddNewCategoryScreen> createState() => _AddNewCategoryScreenState();
+  State<EditNoteScreen> createState() => _EditNoteScreenState();
 }
 
-class _AddNewCategoryScreenState extends State<AddNewCategoryScreen> {
+class _EditNoteScreenState extends State<EditNoteScreen> {
   final formKey = GlobalKey<FormState>();
-  TextEditingController categoryNameController = TextEditingController();
-  CollectionReference categories =
-      FirebaseFirestore.instance.collection('categories');
-
+  TextEditingController noteController = TextEditingController();
+  @override
+  void initState() {
+    noteController.text = widget.note;
+    super.initState();
+  }
+  @override
+  void dispose() {
+    noteController.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,7 +53,7 @@ class _AddNewCategoryScreenState extends State<AddNewCategoryScreen> {
                     width: 10,
                   ),
                   const Text(
-                    "Add New Category",
+                    "Edit Note",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -51,8 +62,10 @@ class _AddNewCategoryScreenState extends State<AddNewCategoryScreen> {
                 height: 60,
               ),
               CustomTextField(
-                controller: categoryNameController,
-                hint: "Category Name",
+                controller: noteController,
+                minLines: 4,
+                maxLines: 10,
+                hint: "Note",
                 validator: (value) {
                   if (value!.isEmpty) {
                     return "Field is required";
@@ -66,15 +79,14 @@ class _AddNewCategoryScreenState extends State<AddNewCategoryScreen> {
               MaterialButton(
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
-                    categories.add({"name": categoryNameController.text}).then(
-                      (value) {
-                        showToast(message: "Category Added Successfully" , color: Colors.green);
+                    FirebaseFirestore.instance.collection('categories').doc(widget.categoryID).collection("notes").doc(widget.noteID).update({"note" : noteController.text}).then(
+                          (value) {
+                        showToast(message: "Note Updated Successfully" , color: Colors.green);
                         Navigator.pop(context);
-                        print("Category $value Added");
                       },
                     ).catchError((error) {
-                      showToast(message: "Category Adding Failed" , color: UiColor.cancelledColor.withOpacity(0.8));
-                      print("Failed to add category: $error");
+                      showToast(message: "Note Updating Failed" , color: UiColor.cancelledColor.withOpacity(0.8));
+                      print("Failed to update note: $error");
                       return;
                     });
                   }
@@ -85,7 +97,7 @@ class _AddNewCategoryScreenState extends State<AddNewCategoryScreen> {
                 color: UiColor.color5,
                 padding: const EdgeInsets.all(10),
                 child: const Text(
-                  "Add",
+                  "Save",
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

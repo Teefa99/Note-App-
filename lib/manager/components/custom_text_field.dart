@@ -6,12 +6,14 @@ class CustomTextField extends StatelessWidget {
   const CustomTextField({
     super.key,
     this.controller,
-    this.hint, this.validator, this.obscureText,
+    this.hint, this.validator, this.obscureText, this.minLines, this.maxLines,
   });
 
   final TextEditingController? controller;
   final String? hint;
   final bool? obscureText;
+  final int? minLines;
+  final int? maxLines;
   final String? Function(String?)? validator;
 
   @override
@@ -21,6 +23,8 @@ class CustomTextField extends StatelessWidget {
       validator: validator,
       cursorColor: UiColor.color5,
       obscureText: obscureText ?? false,
+      minLines: minLines,
+      maxLines: maxLines,
       decoration: InputDecoration(
           border: const OutlineInputBorder(
               borderSide: BorderSide(color: UiColor.dividerColor , width: 0.7),

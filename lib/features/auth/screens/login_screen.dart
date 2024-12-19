@@ -39,6 +39,12 @@ if(googleUser == null){
     Navigator.pushNamedAndRemoveUntil(context, RouteManager.homeScreen , (route) => false,);
   }
   @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(

@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:note_app/features/categories/screens/update_category_screen.dart';
+import 'package:note_app/features/notes/screens/all_notes_screen.dart';
 import 'package:note_app/manager/images.dart';
 import 'package:note_app/manager/route.dart';
 import 'package:note_app/manager/ui/color.dart';
@@ -20,12 +22,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<QueryDocumentSnapshot> categories = [];
   Stream<QuerySnapshot> categoriesStream =
-      FirebaseFirestore.instance.collection('categories').snapshots();
+      FirebaseFirestore.instance.collection('categories').where("UserID" , isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? "").snapshots();
 
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: Stack(
         children: [
           PositionedDirectional(
-            bottom: 16,
+            bottom: 80,
             end: 10,
             child: FloatingActionButton(
               onPressed: () {
@@ -48,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           PositionedDirectional(
-            top: 50,
+            bottom: 10,
             end: 10,
             child: FloatingActionButton(
               onPressed: () async {
@@ -80,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 30,
             ),
             const Text(
-              "Your Notes",
+              "Your Categories",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(
@@ -114,24 +112,31 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisCount: 2, mainAxisExtent: 160.h),
                           itemBuilder: (context, index) {
                             return InkWell(
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => AllNotesScreen(categoryID: categories[index].id),));
+                              },
                               onLongPress: () {
                                 AwesomeDialog(
                                     context: context,
                                     dialogType: DialogType.question,
                                     animType: AnimType.rightSlide,
-                                    title: "Confirm Delete",
-                                    desc: 'Do you want to delete ${categories[index]["name"]}?',
-                                    btnCancelOnPress: () {},
-                                btnOkOnPress: () {
-                                  FirebaseFirestore.instance.collection('categories').doc(categories[index].id).delete().then(
-                                        (value) {
-                                      showToast(message: "Category Deleted Successfully" , color: Colors.green);
+                                    title: "Delete or Update",
+                                    desc: 'What do you want ?',
+                                    btnCancelText: "Delete",
+                                    btnOkText: "Update",
+                                    btnCancelOnPress: () {
+                                      FirebaseFirestore.instance.collection('categories').doc(categories[index].id).delete().then(
+                                            (value) {
+                                          showToast(message: "Category Deleted Successfully" , color: Colors.green);
+                                        },
+                                      ).catchError((error) {
+                                        showToast(message: "Category Deleting Failed" , color: UiColor.cancelledColor.withOpacity(0.8));
+                                        print("Failed to delete category: $error");
+                                        return;
+                                      });
                                     },
-                                  ).catchError((error) {
-                                    showToast(message: "Category Deleting Failed" , color: UiColor.cancelledColor.withOpacity(0.8));
-                                    print("Failed to add category: $error");
-                                    return;
-                                  });
+                                btnOkOnPress: () {
+                                  Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateCategoryScreen(categoryID: categories[index].id, categoryName: categories[index]["name"]),));
                                 },
                                 ).show();
                               },
